@@ -45,28 +45,25 @@ static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct 
   unsigned char *data = (void *)(*pskb)->nh.iph + (*pskb)->nh.iph->ihl*4;//(pskb pointing to nh.iph(header of packet))+(pskb points to nh.iph points to ihl multiplied by 4)
   (*pskb)->nfcache |= NFC_UNKNOWN; // Bitwise OR assignment | compare what matches between pskb and nf_cache and output that to nfcache
 
+  /*
+  I need to modify the header to change (at layer 2) the destination MAC to a new machine
+  d_mac is the first element in the header, change this to FF:FF:FF:FF:FF:FF to broadcast for some reason
+  Final goal is to modify the IP header, need to find out how deep in that is
+  Need to also make this specific to packet types, ping is for control right now
+  */
   if (data == 100){ // ping packet
         printk(“moddifying d_mac\n”); //kernel mode because f is not available this low level
 
-        struct EthHeader header = GetHeader(data); // Grab the header of data before we change it
+        char *buff[]  = GetHeader(data); // Grab the header of data before we change it, read the header into a character array
 
-        char *buff[] = header; // read the header into a character array
-        /*
-        I need to modify the header to change (at layer 2) the destination MAC to a new machine
-        d_mac is the first element in the header, change this to FF:FF:FF:FF:FF:FF to broadcast for some reason
-        */
         for(i=0; i < 6; i++){
           // I want to iterate through a character array containing the modified destination and then write that to the buff
           *temp_array = "FF:FF:FF:FF:FF:FF";
           buff[i] = temp_array[i];
 
         }
-        /*
-        corrupts data
-        data[99]++; // data , add 99 to data
-        (*pskb)->nfcache |= NFC_ALTERED;
-        return NF_ACCEPT;
-        */
+    }
+
   else if (data == 200){
         printk(“dropping packet\n”); // evident how droppign can work for firewalls in the future
         return NF_DROP; // Dropping packet if case 200 met
@@ -74,6 +71,6 @@ static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct 
 
   else {
         return NF_ACCEPT;
-      }
+
    }
 }
