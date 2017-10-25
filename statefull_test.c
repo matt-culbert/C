@@ -58,7 +58,7 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
         for(i=0; i < 6; i=i+1){
           // I want to iterate through a character array containing the modified destination and then write that to the buff
           *temp_array = "FF:FF:FF:FF:FF:FF";
-          buff[i] = temp_array[i];
+          buff[i] = temp_array[i]; // iterate through buffer, replacing it with what temp_array has in that position 
         }
         return NF_ACCEPT;
     }
