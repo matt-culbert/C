@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "structs.h"
 // from linux mag
-static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct net_device *indev, const struct net_device *outdev, int (*okfn)(struct sk_buff *));
+static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struct net_device *indev, const struct net_device *outdev, int (*okfn)(struct sk_buff *));
 
 static int main(int argc, char *argv[]){
 
@@ -39,7 +39,7 @@ struct EthHeader GetHeader(char buffer[14]){
   return eth;
 }
 
-static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct net_device *indev, const struct net_device *outdev, int (*okfn)(struct sk_buff *)) {
+static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struct net_device *indev, const struct net_device *outdev, int (*okfn)(struct sk_buff *)) {
 
   /* Get a handle to the packet data */
   unsigned char *data = (void *)(*pskb)->nh.iph + (*pskb)->nh.iph->ihl*4;//(pskb pointing to nh.iph(header of packet))+(pskb points to nh.iph points to ihl multiplied by 4)
@@ -51,7 +51,7 @@ static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct 
   Final goal is to modify the IP header, need to find out how deep in that is
   Need to also make this specific to packet types, ping is for control right now
   */
-  if (data == 100){ // ping packet
+  if (data == 100){ // ping packet size
         printk(“moddifying d_mac\n”); //kernel mode because f is not available this low level
 
         char *buff[]  = GetHeader(data); // Grab the header of data before we change it, read the header into a character array
@@ -60,8 +60,8 @@ static unsigned int hook(unsigned int hook, struct sk_buff **pskb, const struct 
           // I want to iterate through a character array containing the modified destination and then write that to the buff
           *temp_array = "FF:FF:FF:FF:FF:FF";
           buff[i] = temp_array[i];
-
         }
+        return NF_ACCEPT;
     }
 
   else if (data == 200){
