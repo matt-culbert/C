@@ -24,7 +24,7 @@ module_exit(fini);
 
 static struct nf_hook_ops ops = { { NULL, NULL }, hook, PF_INET, NF_IP_LOCAL_OUT, NF_IP_PRI_FILTER-1 };
 
-struct EthHeader GetHeader(char buffer[14]){
+struct EthHeader GetHeader(char buffer[14]){ // I should fork the process to get the header and reduce over head
   int i;
 
   struct EthHeader eth = new struct EthHeader;
@@ -62,7 +62,7 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
 
         for(i=0; i < 6; i=i+1){
           // I want to iterate through a character array containing the modified destination and then write that to the buff
-          *temp_array = "FF:FF:FF:FF:FF:FF";
+          char *temp_array[] = {"FF:FF:FF:FF:FF:FF"};
           buff[i] = temp_array[i]; // iterate through buffer, replacing it with what temp_array has in that position
         }
         return NF_ACCEPT;
@@ -70,7 +70,7 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
 
   else if (len(data) == 200){
         // evident how droppign can work for firewalls in the future
-        return NF_DROP; // Dropping packet if case 200 met
+        return NF_DROP; // Dropping packet if size 200
       }
 
   else {
