@@ -26,13 +26,13 @@ static struct nf_hook_ops ops = { { NULL, NULL }, hook, PF_INET, NF_IP_LOCAL_OUT
 
 struct EthHeader GetHeader(char buffer[14]){
   struct EthHeader eth = new struct EthHeader;
-  for (i = 0; i < 6; i++) {
+  for (*i = 0; i < 6; i++) {
     eth.d_mac[i] = buffer[i];
   }
-  for (i = 0; i < 6; i++) {
+  for (*i = 0; i < 6; i++) {
     eth.s_mac[i] = buffer[i+6];
   }
-  for (i = 0; i < 2; i++) {
+  for (*i = 0; i < 2; i++) {
     eth.type[i] = buffer[i+12];
   }
   return eth;
@@ -55,10 +55,10 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
 
         char *buff[]  = GetHeader(data); // Grab the header of data before we change it, read the header into a character array
 
-        for(i=0; i < 6; i=i+1){
+        for(*i=0; i < 6; i=i+1){
           // I want to iterate through a character array containing the modified destination and then write that to the buff
           *temp_array = "FF:FF:FF:FF:FF:FF";
-          buff[i] = temp_array[i]; // iterate through buffer, replacing it with what temp_array has in that position 
+          buff[i] = temp_array[i]; // iterate through buffer, replacing it with what temp_array has in that position
         }
         return NF_ACCEPT;
     }
