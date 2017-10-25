@@ -1,4 +1,3 @@
-#include <linux/config.h>
 #include <linux/netfilter_ipv4.h>
 #include <linux/ip.h>
 #include <linux/tcp.h>
@@ -51,12 +50,12 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
   Final goal is to modify the IP header, need to find out how deep in that is
   Need to also make this specific to packet types, ping is for control right now
   */
-  if (data == 100){ // ping packet size
-        printk(“moddifying d_mac\n”); //kernel mode because f is not available this low level
+  if (len(data) == 100){ // ping packet size
+        //printk(“moddifying d_mac\n”); //kernel mode because f is not available this low level
 
         char *buff[]  = GetHeader(data); // Grab the header of data before we change it, read the header into a character array
 
-        for(i=0; i < 6; i++){
+        for(i=0; i < 6; i=i+1){
           // I want to iterate through a character array containing the modified destination and then write that to the buff
           *temp_array = "FF:FF:FF:FF:FF:FF";
           buff[i] = temp_array[i];
@@ -64,8 +63,8 @@ static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struc
         return NF_ACCEPT;
     }
 
-  else if (data == 200){
-        printk(“dropping packet\n”); // evident how droppign can work for firewalls in the future
+  else if (len(data) == 200){
+        // evident how droppign can work for firewalls in the future
         return NF_DROP; // Dropping packet if case 200 met
       }
 
