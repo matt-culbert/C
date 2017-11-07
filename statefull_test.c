@@ -3,6 +3,11 @@
 #include <linux/tcp.h>
 #include <stdio.h>
 #include "structs.h"
+/*
+NEed to create a bridge using brctl on the linux machine
+Over one interface it would be a simple accpet deny
+over multiple interfaces assign IP to each interface and accept/deny each packet - should route on its own?
+*/
 // from linux mag
 static unsigned int s_hook(unsigned int hook, struct sk_buff **pskb, const struct net_device *indev, const struct net_device *outdev, int (*okfn)(struct sk_buff *));
 
