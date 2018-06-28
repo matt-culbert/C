@@ -41,7 +41,6 @@ This is a firewall
 
 #define MASK    ((1 << NBITS) - 1)   /* 100..00 - 1 = 011..11, with NBITS `1` bits */
 // ------------------------------------------------------------------------------------
-
 // Standard include, hardest thing was keeping this in order so it was called correctly
 // ------------------------------------------------------------------------------------
 #include <linux/module.h>
@@ -55,14 +54,11 @@ This is a firewall
 #include <linux/tcp.h>
 #include <linux/inet.h>
 // ------------------------------------------------------------------------------------
-
 // command line argument | called using insmod kernel_firewall.ko dropicmp=1 
 // Add protocol blocking over subnet
-
+// ------------------------------------------------------------------------------------
 // Here we are defining variables that we are using in our code later on
 // Theres no exact order to how it is defined, just adding definitions as I go along
-// ------------------------------------------------------------------------------------
-
 static struct 	nf_hook_ops nfho; // This defines our hook operation for first run  
 struct 			iphdr *iph; // This is the IP header pointer
 struct 			tcphdr *tcp_header; // Our TCP pointer 
