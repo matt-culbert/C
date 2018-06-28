@@ -27,7 +27,7 @@ This is a firewall
 // if dotted decimal isn't defined, default to defining as off
 // This is normally defined when calling it, but I'm hard coding it to off for now
 #ifndef DOTTED_DECIMAL
-#define DOTTED_DECIMAL  0
+#define DOTTED_DECIMAL  0 // I want to return the array as a decimal char string 
 #endif
 
 // Bits versus bytes definition 
@@ -103,11 +103,13 @@ unsigned int hook_func(unsigned int hooknum,
 	// This is where we begin testing the subnetting functionality of this project
 	// This uses a mask array and a mask subnet. Both parts are needed so as to know what range we are blocking. 
 	// With only one part or the other we would not be blocking properly
-    unsigned mask_array[32] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0}; // mask of /24
-    unsigned int masked_sub = 11000000101010001000001100000000; // 192.168.67.0 | we are comparing the output of a binary & to this
-    printk(KERN_INFO "%s\n", masked_sub); // This was added for debugging purposes
+    unsigned mask_array = 0b11111111111111111111111100000000; // mask of /24
+    unsigned masked_sub = 0b11000000101010001000001100000000; // 192.168.67.0 | we are comparing the output of a binary & to this
+	
     sock_buff = skb; // renaming things is fun 
 
+	// ---------------------------------------------------------------------------
+	// This stuff is fairly simple if then procedurals identifying protocols
     if (!sock_buff) { // if there is no socket buffer, accept
         return NF_ACCEPT;
     }
@@ -144,9 +146,14 @@ unsigned int hook_func(unsigned int hooknum,
             return NF_ACCEPT;
         }
     }
-    /*
-	This section is under testing. If running, just leave this alone or delete. It won't matter
-	This is eventually going to be the subnetting 
+	// ---------------------------------------------------------------------------
+    
+	// This section is under testing. If running, just leave this alone or delete. It won't matter
+	// This is eventually going to be the subnetting 
+	// Our mask is 32 bits long. 
+	// We iterate over it 32 times (arrays start at 0)
+	// For each item in the array i, we & it to z and append to y
+	/*
     for(y = 0; y<=31; y++){
         for (i = 0; i<=31; i++) {
             for (z = 0; z <= 31; z++){
@@ -161,9 +168,14 @@ unsigned int hook_func(unsigned int hooknum,
         return NF_DROP;
     }
     */
+	
     return NF_ACCEPT; // default to accept
 }
 
+// This function is very important for formatting IP's into a human readable format, or binary 
+// We format into binary so as to perform an & operation on an address and compare with the range we are blocking 
+// The address gets &'d with first the subnet range, then the mask 
+// This function takes care of converting from gibberish to network length then host length 
 char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz){
     size_t n;
     char *s = buff;
