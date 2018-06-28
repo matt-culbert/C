@@ -71,7 +71,7 @@ int 			bufa [32]; // This is part of a function in testing to deny subnets
 int 			y;// *
 int				i;// *
 int 			z;// These are also for testing subnets 
-unsigned int 	*bufd; // This is used for formatting incoming packet headers
+unsigned int 	*bufd; // This is used for comparing packets in our subnetting portion
 
 // ------------------------------------------------------------------------------------
 // change to array, use for loop and go through and & each of them <- notes to self
