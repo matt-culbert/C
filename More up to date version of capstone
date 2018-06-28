@@ -62,22 +62,23 @@ This is a firewall
 // Here we are defining variables that we are using in our code later on
 // Theres no exact order to how it is defined, just adding definitions as I go along
 // ------------------------------------------------------------------------------------
-static struct nf_hook_ops nfho;
-struct iphdr *iph;
-struct tcphdr *tcp_header;
-struct sk_buff *sock_buff;
-unsigned int sport, dport;
-unsigned char *user_data; 
-long mask;
-int dropicmp = 0;
-int droptcp = 0;
-int bufa [32];
-int y;
-int i;
-int z;
-unsigned int *bufd;
+
+static struct 	nf_hook_ops nfho; // This defines our hook operation for first run  
+struct 			iphdr *iph; // This is the IP header pointer
+struct 			tcphdr *tcp_header; // Our TCP pointer 
+struct 			sk_buff *sock_buff; // Socket buffer pointer
+unsigned int 	sport, dport; // The destination port and source port for identifying purposes 
+long 			mask; // Our mask, this has gone through many different type declarations to figure out the best type 
+int 			dropicmp = 0; // These are for our module parameters deciding whether to drop traffic 
+int 			droptcp = 0; // ^^ 
+int 			bufa [32]; // This is part of a function in testing to deny subnets 
+int 			y;// *
+int				i;// *
+int 			z;// These are also for testing subnets 
+unsigned int 	*bufd; // This is used for formatting incoming packet headers
+
 // ------------------------------------------------------------------------------------
-// change to array, use for loop and go through and & each of them
+// change to array, use for loop and go through and & each of them <- notes to self
 char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz);
 
 // Module params are how things are passed from the command line when calling insmod
