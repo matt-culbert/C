@@ -1,0 +1,147 @@
+// Putting a shell script infront of this would be nice. It would manage modifying certain elements and the reloading of it into kernel space
+// test use case: ping client 1, but redirect to client 2
+// have ip in decimal, try getting our sbnet in decimal form, then & these two to see where it lines up then compare with our subnet to block
+
+#ifndef DOTTED_DECIMAL
+#define DOTTED_DECIMAL  0
+#endif
+
+#if DOTTED_DECIMAL
+#   define NBITS    8
+#   define SEP      "."
+#else /* BINARY */
+#   define NBITS 1
+#   define SEP      ""
+#endif
+
+#define MASK    ((1 << NBITS) - 1)   /* 100..00 - 1 = 011..11, with NBITS `1` bits */
+
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/netdevice.h>
+#include <linux/netfilter.h>
+#include <linux/netfilter_ipv4.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
+#include <linux/inet.h>
+
+static struct nf_hook_ops nfho;
+struct iphdr *iph;
+struct tcphdr *tcp_header;
+struct sk_buff *sock_buff;
+unsigned int sport, dport;
+unsigned char *user_data; 
+// command line argument | called using insmod kernel_firewall.ko dropicmp=1 
+// Add protocol blocking over subnet
+long mask;
+int dropicmp = 0;
+int droptcp = 0;
+int bufa [32];
+int y;
+int i;
+int z;
+unsigned int *bufd;
+// change to array, use for loop and go through and & each of them
+char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz);
+
+module_param(dropicmp, int , 0444); // takes in an int from command line | (name, variable, permissions)
+module_param(droptcp, int , 0444); // takes in an int from command line | (name, variable, permissions)
+
+unsigned int hook_func(unsigned int hooknum,
+                       struct sk_buff **skb,
+                       const struct net_device *in,
+                       const struct net_device *out,
+                       int (*okfn)(struct sk_buff *)){
+
+    unsigned mask_array[32] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0}; // mask of /24
+    unsigned int masked_sub = 11000000101010001000001100000000; // 192.168.67.0 | we are comparing the output of a binary & to this
+    printk(KERN_INFO "%s\n", masked_sub);
+    sock_buff = skb;
+
+    if (!sock_buff) { // if there is no socket buffer, accept
+        return NF_ACCEPT;
+    }
+
+    iph = (struct iphdr *)skb_network_header(sock_buff); // using the socket buffer, create our ip header structure out of packets in it
+    tcp_header = (struct tcphdr *)skb_network_header(sock_buff); 
+
+    if (!iph) {
+        printk(KERN_INFO "no ip header, dropping\n");
+        return NF_DROP;
+    }
+    
+    char line[1024];
+    unsigned long ip_netfmt = iph->saddr; 
+    unsigned long ip_hostfmt = ntohl(ip_netfmt); /* this is the ip in host byte order */
+    bufd = ip_formatted(ip_hostfmt, SEP, line, sizeof line);
+    printk(KERN_INFO"%s\n", bufd);
+
+    if(iph->protocol==IPPROTO_ICMP) { // if ICMP
+        printk(KERN_INFO "SADDR: %d", iph->saddr);
+        if(dropicmp == 1){ // This is working 3/12/2018
+            return NF_DROP; // drop our ICMP traffic if required
+        }
+        else{
+            return NF_ACCEPT;
+        }
+    }
+    if(iph->protocol==IPPROTO_TCP) { // if TCP
+        printk(KERN_INFO "SADDR: %d", iph->saddr);
+        if(droptcp == 1){ // This is working 3/12/2018
+            return NF_DROP; 
+        }
+        else{
+            return NF_ACCEPT;
+        }
+    }
+    /*
+    for(y = 0; y<=31; y++){
+        for (i = 0; i<=31; i++) {
+            for (z = 0; z <= 31; z++){
+                bufa[y] = bufd[z] & mask_array[i];
+            }
+        }
+    }
+    int val;
+    sscanf(bufa, "%d", &val);
+    printk(KERN_INFO "VAL: %d MASK: %d", val, masked_sub);
+    if (val == masked_sub){
+        return NF_DROP;
+    }
+    */
+    return NF_ACCEPT; // default to accept
+}
+
+char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz){
+    size_t n;
+    char *s = buff;
+    int i;
+    for (i = 32 - NBITS; i >= 0; i -= NBITS) {
+        int digit = (ip >> i) & MASK;
+        n = snprintf(s, buffsz, "%s%d", i == 32 - NBITS ? "" : sep, digit);
+        s += n; 
+        buffsz -= n;
+    }
+    return buff;
+}
+
+// initialize
+static int __init initialize(void) {
+    nfho.hook = hook_func;
+    nfho.hooknum = NF_INET_PRE_ROUTING;
+    nfho.pf = PF_INET;
+    nfho.priority = NF_IP_PRI_FIRST;
+    nf_register_hook(&nfho);
+    return 0;
+}
+
+// rmmod 
+static void __exit teardown(void) {
+    nf_unregister_hook(&nfho);
+}
+
+module_init(initialize);
+module_exit(teardown);
+
