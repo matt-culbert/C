@@ -81,9 +81,9 @@ unsigned int 	*bufd; // This is used for formatting incoming packet headers
 // change to array, use for loop and go through and & each of them <- notes to self
 char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz);
 
+// ------------------------------------------------------------------------------------
 // Module params are how things are passed from the command line when calling insmod
 // These are defined here for no particular reason, just need to be in front of the main body function
-
 module_param(dropicmp, int , 0444); // takes in an int from command line | (name, variable, permissions)
 module_param(droptcp, int , 0444); 
 
@@ -100,16 +100,17 @@ unsigned int hook_func(unsigned int hooknum,
                        const struct net_device *out,
                        int (*okfn)(struct sk_buff *)){
 
-	// This is where we begin testing the subnetting functionality of this project
-	// This uses a mask array and a mask subnet. Both parts are needed so as to know what range we are blocking. 
-	// With only one part or the other we would not be blocking properly
+// ------------------------------------------------------------------------------------
+// This is where we begin testing the subnetting functionality of this project
+// This uses a mask array and a mask subnet. Both parts are needed so as to know what range we are blocking. 
+// With only one part or the other we would not be blocking properly
     unsigned mask_array = 0b11111111111111111111111100000000; // mask of /24
     unsigned masked_sub = 0b11000000101010001000001100000000; // 192.168.67.0 | we are comparing the output of a binary & to this
 	
     sock_buff = skb; // renaming things is fun 
 
-	// ---------------------------------------------------------------------------
-	// This stuff is fairly simple if then procedurals identifying protocols
+// ---------------------------------------------------------------------------
+// This stuff is fairly simple if then procedurals identifying protocols
     if (!sock_buff) { // if there is no socket buffer, accept
         return NF_ACCEPT;
     }
@@ -146,14 +147,13 @@ unsigned int hook_func(unsigned int hooknum,
             return NF_ACCEPT;
         }
     }
-	// ---------------------------------------------------------------------------
-    
-	// This section is under testing. If running, just leave this alone or delete. It won't matter
-	// This is eventually going to be the subnetting 
-	// Our mask is 32 bits long. 
-	// We iterate over it 32 times (arrays start at 0)
-	// For each item in the array i, we & it to z and append to y
-	/*
+// ---------------------------------------------------------------------------
+// This section is under testing. If running, just leave this alone or delete. It won't matter
+// This is eventually going to be the subnetting 
+// Our mask is 32 bits long. 
+// We iterate over it 32 times (arrays start at 0)
+// For each item in the array i, we & it to z and append to y
+/*
     for(y = 0; y<=31; y++){
         for (i = 0; i<=31; i++) {
             for (z = 0; z <= 31; z++){
@@ -167,11 +167,12 @@ unsigned int hook_func(unsigned int hooknum,
     if (val == masked_sub){
         return NF_DROP;
     }
-    */
+*/
 	
     return NF_ACCEPT; // default to accept
 }
 
+// ------------------------------------------------------------------------------------
 // This function is very important for formatting IP's into a human readable format, or binary 
 // We format into binary so as to perform an & operation on an address and compare with the range we are blocking 
 // The address gets &'d with first the subnet range, then the mask 
@@ -206,4 +207,3 @@ static void __exit teardown(void) {
 
 module_init(initialize);
 module_exit(teardown);
-
