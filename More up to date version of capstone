@@ -71,7 +71,8 @@ int 			bufa [32]; // This is part of a function in testing to deny subnets
 int 			y;// *
 int				i;// *
 int 			z;// These are also for testing subnets 
-unsigned int 	*bufd; // This is used for comparing packets in our subnetting portion
+unsigned int 	*bufd; // This is used for comparing packets in our subnetting portion 
+unsigned 		num = 0; // This is for the subnetting portion it's a counter iterating during ticks over the mask 
 
 // ------------------------------------------------------------------------------------
 // change to array, use for loop and go through and & each of them <- notes to self
@@ -119,11 +120,13 @@ unsigned int hook_func(unsigned int hooknum,
         return NF_DROP;
     }
     
+	// This stuff has to do with the subnetting portion. 
+	// We convert it to a binary format and use this later.
+	// Right now it does nothing
     char line[1024];
     unsigned long ip_netfmt = iph->saddr; // convert the gibberish to netformat 
     unsigned long ip_hostfmt = ntohl(ip_netfmt); /* this is the ip in host byte order */
     bufd = ip_formatted(ip_hostfmt, SEP, line, sizeof line);
-    printk(KERN_INFO"%s\n", bufd); // debugging print
 
     if(iph->protocol==IPPROTO_ICMP) { // if ICMP
         printk(KERN_INFO "SADDR: %d", iph->saddr);
@@ -143,6 +146,10 @@ unsigned int hook_func(unsigned int hooknum,
             return NF_ACCEPT;
         }
     }
+	if(ip_hostfmt!=whitelisted){
+		printk(KERN_INFO "Bad address detected: %d", ip_hostfmt);
+		
+	}
 // ---------------------------------------------------------------------------
 // This section is under testing. If running, just leave this alone or delete. It won't matter
 // This is eventually going to be the subnetting 
@@ -150,13 +157,16 @@ unsigned int hook_func(unsigned int hooknum,
 // We iterate over it 32 times (arrays start at 0)
 // For each item in the array i, we & it to z and append to y
 /*
-    for(y = 0; y<=31; y++){
-        for (i = 0; i<=31; i++) {
-            for (z = 0; z <= 31; z++){
-                bufa[y] = bufd[z] & mask_array[i];
-            }
-        }
-    }
+    
+	for(y = 0; y<32; y++){
+		if (ip_hostfmt[y] == '1'){
+			num = num + mask_array;
+		}
+		mask_array = mask_array / 2;
+	}
+
+	int output = num & mask;
+	
     int val;
     sscanf(bufa, "%d", &val);
     printk(KERN_INFO "VAL: %d MASK: %d", val, masked_sub);
