@@ -182,7 +182,7 @@ unsigned int hook_func(unsigned int hooknum,
 // This function is very important for formatting IP's into a human readable format, or binary 
 // We format into binary so as to perform an & operation on an address and compare with the range we are blocking 
 // The address gets &'d with first the subnet range, then the mask 
-// This function takes care of converting from gibberish to network length then host length 
+// This function takes care of converting from hex to binary to network length then host length 
 char *ip_formatted(long ip, char *sep, char *buff, size_t buffsz){
     size_t n;
     char *s = buff;
